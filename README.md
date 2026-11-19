@@ -1,11 +1,11 @@
-# skills
+# agent-skills
 
 个人维护的 Agent Skills，遵循 [Agent Skills 规范](https://agentskills.io)，可用于 Claude Code、Codex 等支持该规范的 agent。
 
 ## 安装
 
 ```sh
-npx skills add WangHL0927/skills --skill <名字>
+npx skills add WangHL0927/agent-skills --skill <名字>
 ```
 
 加 `-g` 安装到用户级（所有项目可用）。也可以直接把 `skills/<名字>/` 目录复制或链接到 agent 的 skills 目录。
