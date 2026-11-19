@@ -1,74 +1,76 @@
 ---
 name: stakeholder-review
-description: 多方评审：按决策的真实利益相关方各派一个独立 agent 调研出方案或评审已有方案，由独立的仲裁 agent 汇总、按需再派一轮并拍板，主会话只做协调。用户明确要求多方 / 多 agent / 多模型从不同利益立场各自独立出方案或评估时使用（如“组个产品 team”“各方立场出方案”“多 agent 讨论”“council”）。单方的方案或代码 review、不涉及不同利益方的纯技术复核、有明确答案的问题不用；用户没开口但决策确有多方利益取舍时，先问一句再用。
+description: Multi-stakeholder review. Dispatch one independent agent per real stakeholder of a decision to investigate and propose (or review an existing proposal); an independent arbiter agent consolidates, runs further rounds if needed, and decides; the main session only coordinates. Use when the user explicitly asks for multiple parties / agents / models to work independently from different stakeholder positions (e.g. "get the product team's take", "each stakeholder proposes a plan", "multi-agent discussion", "council", "组个产品 team", "各方立场出方案"). Not for single-party plan or code review, purely technical checks with no differing stakeholder interests, or questions with a clear answer. If the user hasn't asked but the decision clearly involves trade-offs between stakeholders, ask first.
 ---
 
-# 多方评审
+# Stakeholder Review
 
-三种角色：
+Three roles:
 
-- **主会话 = 协调者**：定范围、写简报、派席位和仲裁、转发和转交。它和用户的对话上下文杂、带倾向，所以不仲裁、不改写、不否决仲裁的请求；有不同意见单独标“协调者意见”附在报告后。
-- **席位**：从自己立场调研并出方案（或评审意见）。
-- **仲裁 agent**：全新上下文、用强模型，只接收要决定的事和必要的启动信息，其余自己从现状核实补全；负责整合、决定是否再开一轮、拍板。
+- **Main session = coordinator**: scopes the decision, writes the brief, dispatches seats and the arbiter, relays and hands over. Its conversation context is noisy and biased, so it does not arbitrate, rewrite, or veto the arbiter's requests. Any disagreement it has goes in a separate, labeled "coordinator's note" after the report.
+- **Seats**: each investigates from its own stakeholder position and produces a proposal (or review).
+- **Arbiter agent**: fresh context, strong model. Receives only the decision to be made and the minimum starting information, and fills in the rest by verifying the current state itself. Consolidates, decides whether another round is needed, and makes the call.
 
-价值来自独立调研和真实证据，不来自扮演。
+The value comes from independent investigation and real evidence, not role-play.
 
-**传递方式**（各环节通用）：简单内容用当前 harness 自带的派发、消息、续接工具；复杂内容（方案、整合稿、报告）写成文件，放在各参与方都能读写的绝对路径；工具不支持续接或传递失败时，一律以文件兜底。
+**Handoffs** (all steps): pass simple content with the current harness's built-in dispatch / messaging / resume tools; write complex content (proposals, consolidation drafts, reports) to files at absolute paths every participant can read and write. When the tools can't resume an agent or a handoff fails, fall back to files.
 
-## 0. 定范围
+Communicate with the user, and write the final report, in the user's language.
 
-- 一句话写清要决定什么、不决定什么，以及谁最终拍板（属于用户的事交给用户）。
-- 定模式：**出方案**（从零提出）还是**评审已有方案**。评审时，方案原文作为评审对象给出；出方案时不给任何草案。两种模式都不给协调者对方案的看法。
-- 列出查证入口：现有实现在哪（代码、契约、配置）、使用频次和问题多少去哪查（带时间窗的审计日志、工单、监控）。查不到的写明“未知”。协调者只给入口和原始数据，不做解读，不替席位和仲裁下结论。
+## 0. Scope
 
-## 1. 定席位
+- State in one sentence what is being decided, what is not, and who makes the final call (anything that is the user's call goes back to the user).
+- Pick the mode: **propose** (from scratch) or **review an existing proposal**. In review mode, the proposal text is given as the object under review; in propose mode, no draft is given. In both modes, the coordinator's opinion of any proposal is withheld.
+- List where to verify: where the current implementation lives (code, contracts, config), and where to check usage frequency and issue volume (time-bounded audit logs, tickets, monitoring). Mark anything unavailable as "unknown". The coordinator provides pointers and raw data only — no interpretation, no conclusions on behalf of seats or the arbiter.
 
-- 席位来自这次决策的**真实利益相关方**：产品类是真实用户群，架构类是维护方、调用方、运维、安全、成本承担方等。用户点名的角色必须有。
-- 每个角色至少一个独立 agent。只有利益和验收条件都一致的角色才合并；不设专门唱反调的席位。
-- 模型：条件允许时优先跨厂商、跨 agent；否则用同 agent 不同档位，报告里标“同源”即可。
+## 1. Seats
 
-## 2. 写简报（所有席位和仲裁共用一份）
+- Seats come from the decision's **real stakeholders**: for product decisions, the actual user groups; for architecture, maintainers, callers, operations, security, whoever bears the cost, etc. Any role the user names must be included.
+- At least one independent agent per role. Merge roles only when both their interests and their acceptance criteria are identical. No dedicated devil's-advocate seat.
+- Models: when possible, prefer different vendors and different agents; otherwise use different tiers of the same agent and mark them "same-source" in the report.
 
-给事实，不给结论：
+## 2. Brief (one shared brief for all seats and the arbiter)
 
-- 给：待决问题、模式、用户原话（照录；用户转述的协调者草案不算）、已定约束、查证入口、已知数据和缺口。
-- 不给：协调者的草案、倾向、对已做工作的评价。已做的工作只陈述做了什么、在哪。
-- 角色描述只写“代表谁、他们日常做什么”，不写该得出什么结论。
-- 派前通读一遍，删掉用户原话以外一切“应该 / 建议 / 方案”类措辞。
-- 简报写成文件；每个席位的提示只加自己的角色段落。
+Give facts, not conclusions:
 
-## 3. 第一轮：隔离并行
+- Include: the question to decide, the mode, the user's words verbatim (a coordinator draft the user quoted back doesn't count), fixed constraints, where to verify, known data and gaps.
+- Exclude: the coordinator's drafts, leanings, and evaluations of prior work. Prior work is described only as what was done and where.
+- Role descriptions say only "who this seat represents and what they do day to day", never what it should conclude.
+- Before dispatching, reread the brief and remove every "should / recommend / proposal"-type phrasing other than the user's own words.
+- Write the brief to a file; each seat's prompt adds only its own role paragraph.
 
-所有席位一次并行派出，用全新上下文（不继承协调者的上下文，免得带入草案），收齐前互不可见。每席要求：除自己的产出文件外只读，先调研再发言，篇幅按任务需要。短的直接回传；长的写成文件（按席位命名），回传结论摘要和路径。产出须包含：
+## 3. Round 1: isolated and parallel
 
-1. 本立场的真实场景与痛点
-2. 方案或评审意见（做什么 / 改什么、为什么）
-3. 先做（排序）与明确不做
-4. **接受条件**：方案改成什么样本席才认可
-5. 每条结论标【核实】（附文件 / 命令 / 来源）或【推断】；区分实现证据和使用频次证据，涉及现状却拿不出来源的说法作废
+Dispatch all seats at once in fresh contexts (not inheriting the coordinator's context, so no draft leaks in); seats can't see each other until all are in. Each seat: read-only except for its own output file; investigate before speaking; length as the task requires. Return short output directly; write long output to a file (named by seat) and return a summary plus the path. The output must contain:
 
-## 4. 交给仲裁 agent
+1. The real scenarios and pain points from this position
+2. The proposal or review (what to do / change, and why)
+3. What to do first (ranked) and what explicitly not to do
+4. **Acceptance criteria**: what the plan must look like for this seat to accept it
+5. Every conclusion tagged **[verified]** (with file / command / source) or **[inferred]**; distinguish implementation evidence from usage-frequency evidence. Claims about the current state without a source are void.
 
-协调者派出仲裁 agent（全新上下文，不继承协调者的上下文），输入：简报、各席原稿（全文或路径）。仲裁 agent 读原稿全文，不只看摘要，并：
+## 4. Hand off to the arbiter
 
-- 检查简报有没有引导性措辞，有就指出，后续不采信被引导的部分；协调者给的数据只当线索，关键处自己复核。
-- 整理整合稿：共识、冲突、各席都没提到的盲区、缺失证据，只写事实和分歧，不写裁决。
-- 回传协调者：整合稿，以及“拍板”或“续轮请求”（发给哪些席位、讨论哪些点、哪些事实待核、起草好的提示）。
+The coordinator dispatches the arbiter agent (fresh context, not inheriting the coordinator's context) with: the brief and every seat's original output (full text or path). The arbiter reads the full outputs, not just summaries, and:
 
-## 5. 后续轮次
+- Checks the brief for leading language; flags any, and disregards whatever was led. Treats data supplied by the coordinator as leads only and re-verifies anything decisive.
+- Writes a consolidation draft: consensus, conflicts, blind spots no seat raised, missing evidence — facts and disagreements only, no ruling.
+- Returns to the coordinator: the consolidation draft, plus either "decide" or a "next-round request" (which seats, which points, which facts to verify, and the drafted prompts).
 
-- 仲裁认为还有足以改变裁决的分歧、盲区或待核事实时才提续轮；没有就直接拍板，不为流程硬开。
-- 协调者把仲裁起草的提示原样派给指定席位（不删减、不改写、不否决），收到的答复原样送回**同一个**仲裁 agent；不能续接时，新起的仲裁先读上一轮的整合稿文件接上。
-- 续轮输入只含整合稿相关部分（各方立场、证据、全局事实），**不给初步裁决**。分歧卡在事实上时，直接派核实任务，比再辩一轮有用。
-- 席位要求：改立场写明被哪条新证据或理由说服；坚持原立场要回应对方最强的论点；顺带检查整合稿是否误读或漏掉本方利益。
-- 停止条件：仲裁判断已没有足以改变裁决的新证据或理由。
+## 5. Further rounds
 
-## 6. 拍板与报告
+- The arbiter requests another round only when disagreements, blind spots, or unverified facts could change the ruling; otherwise it decides directly. No rounds for the sake of process.
+- The coordinator sends the arbiter's drafted prompts to the named seats verbatim (no cuts, rewrites, or vetoes) and returns the replies verbatim to the **same** arbiter agent. If it can't be resumed, a new arbiter first reads the previous consolidation draft file.
+- Next-round input contains only the relevant parts of the consolidation draft (each side's position, evidence, shared facts) — **never a preliminary ruling**. When a disagreement hinges on facts, dispatch a verification task instead of another debate.
+- Seats must: name the new evidence or reasoning behind any change of position; when holding a position, answer the other side's strongest argument; and check whether the consolidation draft misreads or omits their side's interests.
+- Stop when the arbiter judges there is no new evidence or reasoning that could change the ruling.
 
-仲裁 agent 出报告；方案大时写成文件。协调者转交时，摘要逐字取自报告的结论段，不改内容。报告包含：
+## 6. Decision and report
 
-- 结论方案（做什么、给谁、先做什么、明确不做什么）
-- 冲突与裁决理由；推翻多数意见的地方单独列出
-- 什么证据会推翻这个结论；缺失证据及建议怎么补
-- 需要用户拍板的事项
-- 评审带来了什么：新增了哪些证据和观点、对裁决的影响，哪些只是推断；跑了几轮、用了哪些模型（标出同源）
+The arbiter writes the report (as a file when large). When handing over, the coordinator's summary is taken verbatim from the report's conclusion section, unchanged. The report contains:
+
+- The decision (what, for whom, what first, what explicitly not)
+- Conflicts and the reasoning behind each ruling; places where the majority was overruled are listed separately
+- What evidence would overturn the decision; missing evidence and how to obtain it
+- Items that need the user's decision
+- What the review contributed: new evidence and viewpoints and their effect on the ruling, what is only inferred; how many rounds ran and which models were used (same-source marked)

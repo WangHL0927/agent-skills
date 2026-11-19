@@ -1,21 +1,25 @@
 # agent-skills
 
-个人维护的 Agent Skills，遵循 [Agent Skills 规范](https://agentskills.io)，可用于 Claude Code、Codex 等支持该规范的 agent。
+English | [中文](README.zh-CN.md)
 
-## 安装
+Personal agent skills following the [Agent Skills specification](https://agentskills.io). They work with Claude Code, Codex, and other agents that support it.
+
+## Install
 
 ```sh
-npx skills add WangHL0927/agent-skills --skill <名字>
+npx skills add WangHL0927/agent-skills --skill <name>
 ```
 
-加 `-g` 安装到用户级（所有项目可用）。也可以直接把 `skills/<名字>/` 目录复制或链接到 agent 的 skills 目录。
+Add `-g` to install at user level (available in every project). You can also copy or symlink `skills/<name>/` into your agent's skills directory.
 
-## 列表
+## Skills
 
-| 名字 | 用途 |
+| Name | What it does |
 |---|---|
-| [stakeholder-review](skills/stakeholder-review/SKILL.md) | 多方评审：按决策的真实利益相关方各派一个独立 agent 调研出方案或评审已有方案，由独立的仲裁 agent 汇总、按需再派一轮并拍板，主会话只做协调。 |
+| [stakeholder-review](skills/stakeholder-review/SKILL.md) | Multi-stakeholder review: one independent agent per real stakeholder investigates and proposes (or reviews an existing proposal); an independent arbiter consolidates, runs further rounds if needed, and decides; the main session only coordinates. |
 
-## 许可
+Skills are written in English; when running, they communicate and report in the user's language.
+
+## License
 
 MIT
