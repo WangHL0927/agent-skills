@@ -18,8 +18,6 @@ Add `-g` to install at user level (available in every project). You can also cop
 |---|---|
 | [stakeholder-review](skills/stakeholder-review/SKILL.md) | Multi-stakeholder review: one independent agent per real stakeholder investigates and proposes (or reviews an existing proposal); an independent arbiter consolidates, runs further rounds if needed, and decides; the main session only coordinates. |
 
-Skills are written in English; when running, they communicate and report in the user's language.
-
 ## License
 
 MIT
