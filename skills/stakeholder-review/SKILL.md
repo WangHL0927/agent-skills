@@ -16,7 +16,7 @@ The value comes from independent investigation and real evidence, not role-play.
 **Handoffs** (all steps): pass simple content with the current harness's built-in dispatch / messaging / resume tools; write complex content (proposals, consolidation drafts, reports) to files. When the tools can't resume an agent or a handoff fails, fall back to files.
 
 - **Run directory**: the coordinator creates one directory per review, in the project or another location every participating agent can read and write (not a session-private temp directory), and passes its absolute path.
-- **Ownership**: every file is named by owner and round — `brief.md` (coordinator), `<seat>-r<N>.md`, `arbiter-consolidation-r<N>.md`, `arbiter-decision.md` — and starts with a line `owner: <name> · round: <N>`. Each agent writes only its own files. Seats never read other seats' files (not at all in round 1; later only what the arbiter passes them). The arbiter may read everything.
+- **Ownership**: every file is named by owner and round — `brief.md` (coordinator), `arbiter-brief-check.md`, `<seat>-r<N>.md`, `arbiter-consolidation-r<N>.md`, `arbiter-decision.md` — and starts with a line `owner: <name> · round: <N>`. Each agent writes only its own files. Seats never read other seats' files (not at all in round 1; later only what the arbiter passes them). The arbiter may read everything.
 - **If a write is refused**: the agent returns the full content inline; the coordinator saves it verbatim under that agent's filename, with the first line noting "saved by coordinator, unchanged".
 
 Communicate with the user, and write the final report, in the user's language.
@@ -43,6 +43,8 @@ Give facts, not conclusions:
 - Before dispatching, reread the brief and remove every "should / recommend / proposal"-type phrasing other than the user's own words.
 - Write the brief to a file; each seat's prompt adds only its own role paragraph.
 
+**Brief check before dispatch**: the coordinator first dispatches the arbiter agent (fresh context) with only the brief, the seat list with role paragraphs, and the user's words. The arbiter checks for leading language, unstated assumptions, missing facts it can verify itself, and missing stakeholders, and returns concrete edits in `arbiter-brief-check.md`. The coordinator applies them as written (no vetoes) and records them at the end of the brief. The same arbiter is used for step 4; if it can't be resumed, the new arbiter reads `arbiter-brief-check.md` first.
+
 ## 3. Round 1: isolated and parallel
 
 Dispatch all seats at once in fresh contexts (not inheriting the coordinator's context, so no draft leaks in); seats can't see each other until all are in. Each seat: read-only except for its own output file; investigate before speaking; length as the task requires. Return short output directly; write long output to its own file and return a summary plus the path. A seat may dispatch its own sub-agents for research; they work only for that seat and follow the same file rules, and anything they find counts as verified only after the seat has checked the original source. The output must contain:
@@ -55,9 +57,9 @@ Dispatch all seats at once in fresh contexts (not inheriting the coordinator's c
 
 ## 4. Hand off to the arbiter
 
-The coordinator dispatches the arbiter agent (fresh context, not inheriting the coordinator's context) with: the brief and every seat's original output (full text or path). The arbiter reads the full outputs, not just summaries, and:
+The coordinator passes every seat's original output (full text or path) to the arbiter from the brief check. The arbiter reads the full outputs, not just summaries, and:
 
-- Checks the brief for leading language; flags any, and disregards whatever was led. Treats data supplied by the coordinator as leads only and re-verifies anything decisive (it may use sub-agents for this, under the same source-check rule).
+- Re-checks the final brief for anything leading that slipped through; flags it, and disregards whatever was led. Treats data supplied by the coordinator as leads only and re-verifies anything decisive (it may use sub-agents for this, under the same source-check rule).
 - Writes a consolidation draft: consensus, conflicts, blind spots no seat raised, missing evidence — facts and disagreements only, no ruling.
 - Returns to the coordinator: the consolidation draft, plus either "decide" or a "next-round request" (which seats, which points, which facts to verify, and the drafted prompts).
 
