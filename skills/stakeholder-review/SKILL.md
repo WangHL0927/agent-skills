@@ -25,13 +25,18 @@ Communicate with the user, and write the final report, in the user's language.
 
 - State in one sentence what is being decided, what is not, and who makes the final call (anything that is the user's call goes back to the user).
 - Pick the mode: **propose** (from scratch) or **review an existing proposal**. In review mode, the proposal text is given as the object under review; in propose mode, no draft is given. In both modes, the coordinator's opinion of any proposal is withheld.
+- **Check it is worth a full review.** It pays off when stakeholder interests genuinely conflict, decisive facts are unknown, and a wrong call is costly to undo. Otherwise tell the user and offer the light path: verify the facts, one author proposes, a reviewer from another vendor reviews independently, then show the user something concrete (a prototype or sample). Escalate to a full review if that surfaces a real conflict.
 - List where to verify: where the current implementation lives (code, contracts, config), and where to check usage frequency and issue volume (time-bounded audit logs, tickets, monitoring). Mark anything unavailable as "unknown". The coordinator provides pointers and raw data only — no interpretation, no conclusions on behalf of seats or the arbiter.
+- List where real stakeholder evidence lives: analytics segmented by role, session recordings, support threads and tickets, feedback; or a few questions answered by actual members of a stakeholder group. Without it, every seat's account of "what this group needs" is role-play; say so up front.
+- **Feasibility facts first**: before the brief, verify the facts that could make whole options moot — whether the data exists, its coverage and quality, whether the needed tables / fields / APIs exist. Put the results in the brief as known data. Don't spend a debate round discovering them.
 
 ## 1. Seats
 
 - Seats come from the decision's **real stakeholders**: for product decisions, the actual user groups; for architecture, maintainers, callers, operations, security, whoever bears the cost, etc. Any role the user names must be included.
 - At least one independent agent per role. Merge roles only when both their interests and their acceptance criteria are identical. No dedicated devil's-advocate seat.
 - Models: when possible, prefer different vendors and different agents; otherwise use different tiers of the same agent and mark them "same-source" in the report.
+- The arbiter should come from a different vendor than whoever wrote the proposal under review (often the coordinator). If that's impossible, mark it "same-source as the author".
+- When the decision is about something people look at (UI, a report, a document layout), include a seat that judges rendered output — screenshots or a clickable prototype — rather than code and text.
 
 ## 2. Brief (one shared brief for all seats and the arbiter)
 
@@ -41,9 +46,10 @@ Give facts, not conclusions:
 - Exclude: the coordinator's drafts, leanings, and evaluations of prior work. Prior work is described only as what was done and where.
 - Role descriptions say only "who this seat represents and what they do day to day", never what it should conclude.
 - Before dispatching, reread the brief and remove every "should / recommend / proposal"-type phrasing other than the user's own words.
+- Any assumption the coordinator could not verify is labeled "coordinator assumption" in a separate list, never mixed into the facts.
 - Write the brief to a file; each seat's prompt adds only its own role paragraph.
 
-**Brief check before dispatch**: the coordinator first dispatches the arbiter agent (fresh context) with only the brief, the seat list with role paragraphs, and the user's words. The arbiter checks for leading language, unstated assumptions, missing facts it can verify itself, and missing stakeholders, and returns concrete edits in `arbiter-brief-check.md`. The coordinator applies them as written (no vetoes) and records them at the end of the brief. The same arbiter is used for step 4; if it can't be resumed, the new arbiter reads `arbiter-brief-check.md` first.
+**Brief check before dispatch**: the coordinator first dispatches the arbiter agent (fresh context) with only the brief, the seat list with role paragraphs, and the user's words. The arbiter checks for leading language, unstated assumptions, missing facts it can verify itself, and missing stakeholders; it rules on each "coordinator assumption" as fact (verified), leaning (delete), or open question (keep, labeled); and returns concrete edits in `arbiter-brief-check.md`. The coordinator applies them as written (no vetoes) and records them at the end of the brief. The same arbiter is used for step 4; if it can't be resumed, the new arbiter reads `arbiter-brief-check.md` first.
 
 ## 3. Round 1: isolated and parallel
 
@@ -53,7 +59,7 @@ Dispatch all seats at once in fresh contexts (not inheriting the coordinator's c
 2. The proposal or review (what to do / change, and why)
 3. What to do first (ranked) and what explicitly not to do
 4. **Acceptance criteria**: what the plan must look like for this seat to accept it
-5. Every conclusion tagged **[verified]** (with file / command / source) or **[inferred]**; distinguish implementation evidence from usage-frequency evidence. Claims about the current state without a source are void.
+5. Every conclusion tagged **[verified]** (with file / command / source) or **[inferred]**; distinguish implementation evidence from usage-frequency evidence. Claims about the current state without a source are void. Scenarios and needs without real stakeholder evidence are [inferred] and cannot by themselves decide a ruling.
 
 ## 4. Hand off to the arbiter
 
@@ -61,6 +67,7 @@ The coordinator passes every seat's original output (full text or path) to the a
 
 - Re-checks the final brief for anything leading that slipped through; flags it, and disregards whatever was led. Treats data supplied by the coordinator as leads only and re-verifies anything decisive (it may use sub-agents for this, under the same source-check rule).
 - Writes a consolidation draft: consensus, conflicts, blind spots no seat raised, missing evidence — facts and disagreements only, no ruling.
+- Checks whether a split follows vendor lines rather than roles (all seats of one vendor on one side). If so, have the same role answered by the other vendor before treating it as a stakeholder conflict.
 - Returns to the coordinator: the consolidation draft, plus either "decide" or a "next-round request" (which seats, which points, which facts to verify, and the drafted prompts).
 
 ## 5. Further rounds
@@ -78,5 +85,7 @@ The arbiter writes the report (as `arbiter-decision.md` when large). When handin
 - The decision (what, for whom, what first, what explicitly not)
 - Conflicts and the reasoning behind each ruling; places where the majority was overruled are listed separately
 - What evidence would overturn the decision; missing evidence and how to obtain it
-- Items that need the user's decision
+- Open items, each with a default and its reason. Only items that are hard to reverse or purely the user's preference go to the user. The rest proceed on the default and are reported as "defaults taken".
+- For decisions about something people look at: what to check on screen, both on a prototype before implementation and with real data after
 - What the review contributed: new evidence and viewpoints and their effect on the ruling, what is only inferred; how many rounds ran and which models were used (same-source marked)
+- A follow-up: when to look back and what to check (which conclusions held, what the review missed); the coordinator puts it on the task list
